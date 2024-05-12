@@ -33,8 +33,10 @@ app.layout = html.Div([
         dbc.Label('Miembro'),
         tbl.DataTable(
         id='table',
-        columns=[{"id":i} for i in df.head(10)],
-        data=df.head(10).to_dict('records')
+        columns=[{"id":i} for i in df.columns],
+        data=df.to_dict('records'),
+        page_size=15000,
+        style_table={'height': '500px', 'overflowY': 'auto'}
         ),
         dbc.Alert(id='tbl_out')
     ]),
