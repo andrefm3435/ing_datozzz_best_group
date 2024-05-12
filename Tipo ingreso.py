@@ -34,7 +34,9 @@ app.layout = html.Div([
         tbl.DataTable(
         id='table',
         columns=[{"id":i} for i in dz.head(10)],
-        data=dz.head(10).to_dict('records')
+        data=dz.head(10).to_dict('records'),
+        page_size=15000,
+        style_table={'height': '500px', 'overflowY': 'auto'}
         ),
         dbc.Alert(id='tbl_out')
     ]),
