@@ -3,7 +3,17 @@
 
 
 -- ¿Cuáles son los ingresos de las personas las cuales han terminado sus estudios universitarios a comparación de aquellas personas que no la han completado?
+SELECT ingreso_tot
+FROM tipo_ingreso 
+JOIN miembro ON tipo_ingreso.id2_miembro = miembro.id_miembro 
+JOIN educacion ON miembro.id_miembro = educacion.id1_miembro 
+WHERE educacion.nivel_actual = 'Universitario';
 
+SELECT ingreso_tot
+FROM tipo_ingreso 
+JOIN miembro ON tipo_ingreso.id2_miembro = miembro.id_miembro 
+JOIN educacion ON miembro.id_miembro = educacion.id1_miembro 
+WHERE educacion.nivel_actual != 'Universitario';
 
 -- ¿Cómo compara la situación laboral de la gente que vive con sus padres versus quienes no?
 
