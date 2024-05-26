@@ -16,8 +16,24 @@ JOIN educacion ON miembro.id_miembro = educacion.id1_miembro
 WHERE educacion.nivel_actual != 'Universitario';
 
 -- ¿Cómo compara la situación laboral de la gente que vive con sus padres versus quienes no?
-select estado_ocup,avg(ingreso_tot) as ingreso from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro where miembro.nmiembro_padre<0 and miembro.nmiembro_madre<0 group by(estado_ocup)
-select estado_ocup,avg(ingreso_tot) as ingreso from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro where not(miembro.nmiembro_padre<0 and miembro.nmiembro_madre<0) group by(estado_ocup)
+
+select (miembro.nmiembro_padre>0 or nmiembro_madre>0)as padres,avg(ingreso_tot) from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro GROUP by(padres);
+select (miembro.nmiembro_padre>0 or nmiembro_madre>0)as padres,estado_ocup from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.ingreso_tot where ingreso_tot>0;
+select count (tipo_ingreso.estado_ocup from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro where ingreso_tot>0 and (miembro.nmiembro_padre>0 or nmiembro_madre>0) group by(estado_ocup));
+SELECT estado_ocup, COUNT(tipo_ingreso.estado_ocup)
+FROM miembro
+INNER JOIN tipo_ingreso ON miembro.id_miembro = tipo_ingreso.id2_miembro
+WHERE tipo_ingreso.ingreso_tot > 0 
+  AND (miembro.nmiembro_padre > 0 OR miembro.nmiembro_madre > 0) 
+GROUP BY tipo_ingreso.estado_ocup
+
+
+SELECT estado_ocup,COUNT(tipo_ingreso.estado_ocup)
+FROM miembro
+INNER JOIN tipo_ingreso ON miembro.id_miembro = tipo_ingreso.id2_miembro
+WHERE tipo_ingreso.ingreso_tot > 0 
+  AND not(miembro.nmiembro_padre > 0 OR miembro.nmiembro_madre > 0) 
+GROUP BY tipo_ingreso.estado_ocup
 
 
 -- ¿En promedio cuantos ingresos de familias cuya cabeza de hogar sea mujer superan el salario mínimo en argentina durante el 2019?
