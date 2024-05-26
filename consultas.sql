@@ -19,7 +19,37 @@ WHERE educacion.nivel_actual != 'Universitario';
 
 
 -- ¿En promedio cuantos ingresos de familias cuya cabeza de hogar sea mujer superan el salario mínimo en argentina durante el 2019?
+SELECT mi.id_miembro, mi.parentesco, mi.sexo, ti.ingreso_tot
+FROM miembro mi
+JOIN Tipo_ingreso ti ON mi.id_miembro = ti.id2_miembro
+WHERE mi.sexo = 'Mujer' AND mi.parentesco = 'Jefe';
 
+SELECT 
+    CASE 
+        WHEN ti.ingreso_tot > 14125 THEN 'Superiores a 14125'
+        ELSE 'Inferiores a 14125'
+    END AS salario_grupo,
+    COUNT(*) AS count
+FROM miembro mi
+JOIN Tipo_ingreso ti ON mi.id_miembro = ti.id2_miembro
+WHERE mi.sexo = 'Mujer' AND mi.parentesco = 'Jefe'
+GROUP BY salario_grupo;
+
+WITH quartiles AS (
+    SELECT ingreso_tot,
+        NTILE(4) OVER (ORDER BY ingreso_tot) AS quartile
+    FROM (
+        SELECT ti.ingreso_tot
+        FROM miembro mi
+        JOIN Tipo_ingreso ti ON mi.id_miembro = ti.id2_miembro
+        WHERE mi.sexo = 'Mujer' AND mi.parentesco = 'Jefe'
+    ) AS subquery
+)
+SELECT quartile,
+    AVG(ingreso_tot) AS ingreso_promedio
+FROM quartiles
+GROUP BY quartile
+ORDER BY quartile;
 
 -- ¿Como se comparan los ingresos familiares y el salario entre universidad privada y pública?
 
