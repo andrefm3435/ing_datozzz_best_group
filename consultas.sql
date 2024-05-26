@@ -19,7 +19,6 @@ WHERE educacion.nivel_actual != 'Universitario';
 
 select (miembro.nmiembro_padre>0 or nmiembro_madre>0)as padres,avg(ingreso_tot) from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro GROUP by(padres);
 select (miembro.nmiembro_padre>0 or nmiembro_madre>0)as padres,estado_ocup from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.ingreso_tot where ingreso_tot>0;
-select count (tipo_ingreso.estado_ocup from miembro inner join tipo_ingreso on miembro.id_miembro=tipo_ingreso.id2_miembro where ingreso_tot>0 and (miembro.nmiembro_padre>0 or nmiembro_madre>0) group by(estado_ocup));
 SELECT estado_ocup, COUNT(tipo_ingreso.estado_ocup)
 FROM miembro
 INNER JOIN tipo_ingreso ON miembro.id_miembro = tipo_ingreso.id2_miembro
