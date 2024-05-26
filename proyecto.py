@@ -100,14 +100,29 @@ sql_query5 = "select salud.lugar_nacimiento, AVG(tipo_ingreso.ingreso_tot_lab) A
 df5 =pd.read_sql(sql_query5, conn)
 
 # Pregunta 6
+sql_query6 = """
+WITH tamanio_hogar AS (
+    SELECT id_hogar, COUNT(*) AS num_miembros
+    FROM miembro
+    GROUP BY id_hogar
+),
+
+promedio_escolaridad_hogar AS (
+    SELECT m.id_hogar, AVG(e.años_escolaridad) AS promedio_escolaridad
+    FROM miembro m
+    JOIN educacion e ON m.id_miembro = e.id1_miembro
+    GROUP BY m.id_hogar
+)
+
+SELECT t.num_miembros, AVG(p.promedio_escolaridad) AS promedio_escolaridad
+FROM tamanio_hogar t
+JOIN promedio_escolaridad_hogar p ON t.id_hogar = p.id_hogar
+GROUP BY t.num_miembros
+ORDER BY t.num_miembros;
+"""
+df6 =pd.read_sql(sql_query6, conn)
 
 # Pregunta 7
-
-
-
-
-
-
 
 app = dash.Dash(__name__)
 
@@ -207,7 +222,17 @@ app.layout = html.Div([
             yaxis_title = 'Salario'
             )
         
+        ),
+
+    # Pregunta 6
+    dcc.Graph(
+    id = 'pregunta_6',
+        figure=px.bar(df6, x='num_miembros', y='promedio_escolaridad', title='¿Las familias más grandes tienden a tener una mejor, igual o peor educación que las familias más pequeñas?').update_layout(            
+        xaxis_title = 'Número de miembros de la familia',
+        yaxis_title = 'Promedio de escolaridad'
         )
+    )
+
 ])
 
 @callback(Output('tbl_out','children'),Input('tbl','active_cell'))
