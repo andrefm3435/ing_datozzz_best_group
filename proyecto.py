@@ -68,7 +68,7 @@ GROUP BY salario_grupo;
 """
 
 
-# Consulta SQL para calcular los promedios de salarios por cuartil sin usar NTILE
+# Consulta SQL para calcular los promedios de salarios por cuartil 
 query3iii = """ 
 WITH quartiles AS (
     SELECT ingreso_tot,
