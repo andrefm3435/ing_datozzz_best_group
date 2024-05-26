@@ -52,10 +52,15 @@ GROUP BY quartile
 ORDER BY quartile;
 
 -- ¿Como se comparan los ingresos familiares y el salario entre universidad privada y pública?
-
+Select educacion.sector_educativo, avg(tipo_ingreso.ingreso_fam) as ingresos_familiares, 
+avg(tipo_ingreso.ingreso_tot_lab) as salario from educacion 
+join miembro on educacion.id1_miembro = miembro.id_miembro join tipo_ingreso on educacion.id1_miembro = tipo_ingreso.id2_miembro 
+where sector_educativo != '' group by educacion.sector_educativo;
 
 -- ¿Qué lugar de nacimiento (de los presentes en la encuesta) cuenta con los mayores salarios?
-
+select salud.lugar_nacimiento, AVG(tipo_ingreso.ingreso_tot_lab) AS salario from salud 
+JOIN miembro ON salud.id3_miembro = miembro.id_miembro 
+JOIN tipo_ingreso ON salud.id3_miembro = tipo_ingreso.id2_miembro group by salud.lugar_nacimiento;
 
 -- ¿Las familias más grandes tienden a tener una mejor, igual o peor educación que las familias más pequeñas?
 WITH tamanio_hogar AS (
