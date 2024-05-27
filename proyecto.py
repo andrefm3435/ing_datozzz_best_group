@@ -291,8 +291,8 @@ def render_content(tab):
             html.P("Se dispone de un conjunto de datos que contiene información demográfica y socioeconómica de Argentina en el 2019, sujeta a ciertas restricciones y reglas. El objetivo es realizar un análisis detallado de estos datos para responder a una serie de preguntas relacionadas con los ingresos, la educación, el estado conyugal, la situación laboral y otros aspectos relevantes de la población. El enfoque principal está orientado a entender los distintos factores que influyen en la obtención de salarios elevados, identificando así las variables determinantes en el panorama socioeconómico del país.", 
                    style={'fontSize': '25px'}
                    ),
-            html.Div(html.P(['William Cabrera', html.Br(), 'Paola Cortés', html.Br(), 'Andrés Miranda Mendoza', html.Br(), 'Sofía Torres', html.Br(), 'Simón Vélez Castillo'])),
-            html.P("Universidad del Rosario 2024-I")
+            html.Div(html.P(['William Cabrera', html.Br(), 'Paola Cortés', html.Br(), 'Andrés Miranda Mendoza', html.Br(), 'Sofía Torres', html.Br(), 'Simón Vélez Castillo'], style={'fontSize': '25px'})),
+            html.P("Universidad del Rosario 2024-I", style={'fontSize': '25px'})
         ])
     elif tab == 'tab-1':
         return html.Div([
@@ -362,7 +362,10 @@ def render_content(tab):
                     yaxis_title='Cantidad'
                 )
             ),
-            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'})
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('Tras revisar los datos presentes en la base del censo para comparar tanto los ingresos como la situación laboral de las personas que viven en un mismo hogar con sus padres con respecto a las personas que no viven con sus padres en casa; desde el primer momento se nota una clara y abismal diferencia entre ambos grupos, tanto en el estado laboral como en el promedio de los ingresos de cada uno,dando en ambos casos a entender que es el grupo de aquellos que no viven con sus padres los que trabajan, y por ende los que obtienen más ingresos en promedio,dando a entender que no es tan grande la cantidad de hogares donde sea necesario que los hijos comiencen a trabajar por dificultades del hogar, sino que pueden  disfrutar de su rol de hijos, mientras llegan a la adultez, para posteriormente hacerse cargo de si mismos.',
+                   style={'fontSize': '25px'}
+                   )
         ])
     elif tab == 'tab-3':
         return html.Div([
@@ -446,7 +449,7 @@ def render_content(tab):
                 ).update_traces(marker_color='#00CC96', marker_line_color='rgb(8,48,107)', marker_line_width=1.5)
             ),
             html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
-            html.P('La visualización muestra los lugares de nacimiento con los mayores salarios, destacando las diferencias geográficas en los ingresos.',
+            html.P('Aquellas personas que ganan menos son las que se encuentran en las afueras del país. Esto lo notamos gracias a que los países limítrofes y no limítrofes son los que menos ganan. De igual forma, Caba tampoco tiene un salario muy alto, siendo esta la zona central de Buenos Aires. Otras provincias tienen ganancias intermedias. Luego, podemos notar que las personas que tienen el salario promedio más alto son las que viven en la provincia de Buenos Aires. Entonces, aquellas personas que son de PBA, sin especificar, son las que ganan más, seguidas por las personas que viven en PBA, excepto GBA. Luego, en tercer lugar, vienen las personas que nacieron en GBA. Entonces, aquellas personas que ganan más son las que nacieron en las zonas que rodean la parte central de Buenos Aires.',
                    style={'fontSize': '25px'})
         ])
     elif tab == 'tab-6':
