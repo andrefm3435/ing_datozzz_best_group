@@ -302,16 +302,16 @@ def render_content(tab):
                 figure=go.Figure(
                     data=[
                         go.Scatter(
-                            x=R_uni.index,  
-                            y=R_uni['ingreso_tot'],  
-                            mode='lines',  
-                            name='Ingresos de Universitarios'  
-                        ),
-                        go.Scatter(
                             x=R_no_uni.index, 
                             y=R_no_uni['ingreso_tot'], 
                             mode='lines',  
                             name='Ingresos de No Universitarios'  
+                        ),
+                        go.Scatter(
+                            x=R_uni.index,  
+                            y=R_uni['ingreso_tot'],  
+                            mode='lines',  
+                            name='Ingresos de Universitarios'  
                         )
                     ],
                     layout=go.Layout(
