@@ -327,7 +327,7 @@ def render_content(tab):
                 )
             ),
             html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
-            html.P('Los ingresos de los no universitarios (rojo) son mucho más altos y presentan una mayor variabilidad en comparación con los ingresos de los universitarios (azul), los ingresos de los no universitarios muestran una alta variabilidad con algunos picos significativos que alcanzan ingresos muy altos, sin embargo la mayoría de los datos se agrupan en rangos bajos de ingresos, hay varios picos en los ingresos de los no universitarios, destacando uno muy alto cerca del índice 10k lo que podría indicar casos excepcionales.',
+            html.P('Los ingresos de los no universitarios (azul) son mucho más altos y presentan una mayor variabilidad en comparación con los ingresos de los universitarios (rojo), los ingresos de los no universitarios muestran una alta variabilidad con algunos picos significativos que alcanzan ingresos muy altos, sin embargo la mayoría de los datos se agrupan en rangos bajos de ingresos, hay varios picos en los ingresos de los no universitarios, destacando uno muy alto cerca del índice 10k lo que podría indicar casos excepcionales.',
                    style={'fontSize': '25px'}
                    )
         ])
@@ -339,13 +339,6 @@ def render_content(tab):
                 figure=px.bar(df2_1, x='padres', y='avg_ingreso_tot', title='¿Cómo se compara la situación laboral de la gente que vive con sus padres versus quienes no?').update_layout(
                     xaxis_title='¿vive con padres?',
                     yaxis_title='Ingresos persona'
-                )
-            ),
-            dcc.Graph(
-                id='grafica2',
-                figure=px.bar(df2_2, x='padres', y='estado_ocup', title='Situación laboral').update_layout(
-                    xaxis_title='¿vive con padres?',
-                    yaxis_title='Situación laboral'
                 )
             ),
             dcc.Graph(
@@ -373,8 +366,7 @@ def render_content(tab):
             dcc.Graph(
                 id='salary-graph',
                 figure=px.scatter(df3, x='id_miembro', y='ingreso_tot', title='Salarios de Mujeres Jefas de Familia',
-                                  labels={'id_miembro': 'ID del Miembro', 'ingreso_tot': 'Salarios'},
-                                  trendline='ols',  
+                                  labels={'id_miembro': 'ID del Miembro', 'ingreso_tot': 'Salarios'},  
                                   color='ingreso_tot',
                                   color_continuous_scale=px.colors.sequential.Viridis)
             ),
@@ -473,14 +465,24 @@ def render_content(tab):
                 id='pregunta_7_1',
                 figure=px.bar(df7_1, x='categoria_ingreso', y='promedio_salario', title='Salario según los ingresos familiares (Ingresos familiares divididos en "superior" e "inferior" a la media)').update_layout(
                     xaxis_title='Categoría de ingresos familiares (superior e inferior a la media)',
-                    yaxis_title='Promedio del salario'
+                    yaxis_title='Promedio del salario',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Arial", size=14),
+                    title_font=dict(size=20),
+                    title_x=0.5
                 )
             ),
             dcc.Graph(
                 id='pregunta_7_2',
                 figure=px.bar(df7_2, x='cuartil', y='promedio_salario', title='Salario según los ingresos familiares (Ingresos familiares divididos en cuartiles)').update_layout(
                     xaxis_title='Cuartiles',
-                    yaxis_title='Promedio del salario'
+                    yaxis_title='Promedio del salario',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Arial", size=14),
+                    title_font=dict(size=20),
+                    title_x=0.5
                 )
             ),  
             html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
