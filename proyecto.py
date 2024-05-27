@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 dbname = "datos_Argentina"
-user = "juan"
+user = "javier"
 password = "123456"
 host = "localhost"
 
@@ -164,6 +164,7 @@ df5 = pd.read_sql(sql_query5, conn)
 
 #Pregunta 6
 sql_query6 = """
+-- Consulta dividiendo los ingresos familiares en 'superior a la media' e 'inferior a la media'
 WITH tamanio_hogar AS (
     SELECT id_hogar, COUNT(*) AS num_miembros
     FROM miembro
@@ -185,27 +186,117 @@ ORDER BY t.num_miembros;
 """
 df6 =pd.read_sql(sql_query6, conn)
 
+#Pregunta 7
+sql_query7_1 = """
+WITH ingreso_per_capita AS (
+    SELECT 
+        id_hogar,
+        ingreso_fam,
+        COUNT(*) AS num_miembros,
+        (ingreso_fam / COUNT(*)) AS ingreso_per_capita
+    FROM miembro m
+    JOIN Tipo_ingreso t ON m.id_miembro = t.id2_miembro
+    GROUP BY id_hogar, ingreso_fam
+),
+ingreso_per_capita_media AS (
+    SELECT AVG(ingreso_per_capita) AS ingreso_per_capita_medio
+    FROM ingreso_per_capita
+),
+salarios_comparacion AS (
+    SELECT 
+        m.id_miembro,
+        t.ingreso_tot_lab,
+        ipc.ingreso_per_capita,
+        ipcm.ingreso_per_capita_medio,
+        CASE 
+            WHEN ipc.ingreso_per_capita > ipcm.ingreso_per_capita_medio THEN 'Superior'
+            ELSE 'Inferior'
+        END AS categoria_ingreso
+    FROM miembro m
+    JOIN Tipo_ingreso t ON m.id_miembro = t.id2_miembro
+    JOIN ingreso_per_capita ipc ON m.id_hogar = ipc.id_hogar
+    CROSS JOIN ingreso_per_capita_media ipcm
+)
+SELECT 
+    categoria_ingreso,
+    AVG(ingreso_tot_lab) AS promedio_salario
+FROM salarios_comparacion
+GROUP BY categoria_ingreso;
+"""
+sql_query7_2 = """
+-- 'Consulta diviendo los ingresos familiares en cuartiles'
+WITH ingreso_per_capita AS (
+    SELECT 
+        id_hogar,
+        ingreso_fam,
+        COUNT(*) AS num_miembros,
+        (ingreso_fam / COUNT(*)) AS ingreso_per_capita
+    FROM miembro m
+    JOIN Tipo_ingreso t ON m.id_miembro = t.id2_miembro
+    GROUP BY id_hogar, ingreso_fam
+),
+cuartiles AS (
+    SELECT 
+        ingreso_per_capita,
+        NTILE(4) OVER (ORDER BY ingreso_per_capita) AS cuartil
+    FROM ingreso_per_capita
+),
+salarios_comparacion AS (
+    SELECT 
+        m.id_miembro,
+        t.ingreso_tot_lab,
+        ipc.ingreso_per_capita,
+        c.cuartil
+    FROM miembro m
+    JOIN Tipo_ingreso t ON m.id_miembro = t.id2_miembro
+    JOIN ingreso_per_capita ipc ON m.id_hogar = ipc.id_hogar
+    JOIN cuartiles c ON ipc.ingreso_per_capita = c.ingreso_per_capita
+)
+SELECT 
+    cuartil,
+    AVG(ingreso_tot_lab) AS promedio_salario
+FROM salarios_comparacion
+GROUP BY cuartil
+ORDER BY cuartil;
+
+"""
+df7_1 =pd.read_sql(sql_query7_1, conn)
+df7_2 =pd.read_sql(sql_query7_2, conn)
+
+
+
 app = dash.Dash(__name__)
 
 # Layout con botones de navegación y contenido dinámico
 app.layout = html.Div([
-    html.H1('Análisis de Datos Socioeconómicos de Argentina 2019', style={'text-align': 'center'}),
+
+    html.H1('Un análisis basado en datos de los salarios y la economía doméstica en Argentina en 2019', style={'text-align': 'center'}),
     dcc.Tabs(id='tabs', value='tab-1', children=[
+        dcc.Tab(label='Información', value='info'),
         dcc.Tab(label='Pregunta 1', value='tab-1'),
         dcc.Tab(label='Pregunta 2', value='tab-2'),
         dcc.Tab(label='Pregunta 3', value='tab-3'),
         dcc.Tab(label='Pregunta 4', value='tab-4'),
         dcc.Tab(label='Pregunta 5', value='tab-5'),
-        dcc.Tab(label='Pregunta 6', value='tab-6')
+        dcc.Tab(label='Pregunta 6', value='tab-6'),
+        dcc.Tab(label='Pregunta 7', value='tab-7')
     ]),
     html.Div(id='content')
 ])
 
 @app.callback(Output('content', 'children'), [Input('tabs', 'value')])
 def render_content(tab):
-    if tab == 'tab-1':
+    if tab == 'info':
         return html.Div([
-            html.H3('Pregunta 1: Ingresos de Universitarios vs No Universitarios'),
+            html.P("Se dispone de un conjunto de datos que contiene información demográfica y socioeconómica de Argentina en el 2019, sujeta a ciertas restricciones y reglas. El objetivo es realizar un análisis detallado de estos datos para responder a una serie de preguntas relacionadas con los ingresos, la educación, el estado conyugal, la situación laboral y otros aspectos relevantes de la población. El enfoque principal está orientado a entender los distintos factores que influyen en la obtención de salarios elevados, identificando así las variables determinantes en el panorama socioeconómico del país.", 
+                   style={'fontSize': '25px'}
+                   ),
+            html.Div(html.P(['William Cabrera', html.Br(), 'Paola Cortés', html.Br(), 'Andrés Miranda Mendoza', html.Br(), 'Sofía Torres', html.Br(), 'Simón Vélez Castillo'])),
+            html.P("Universidad del Rosario 2024-I")
+        ])
+    elif tab == 'tab-1':
+        return html.Div([
+            html.H3('Pregunta 1: Ingresos de Universitarios vs No Universitarios', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id='grafica1',
                 figure=go.Figure(
@@ -235,11 +326,14 @@ def render_content(tab):
                     )
                 )
             ),
-            html.P('Conclusión:Los ingresos de los no universitarios (rojo) son mucho más altos y presentan una mayor variabilidad en comparación con los ingresos de los universitarios (azul), los ingresos de los no universitarios muestran una alta variabilidad con algunos picos significativos que alcanzan ingresos muy altos, sin embargo la mayoría de los datos se agrupan en rangos bajos de ingresos, hay varios picos en los ingresos de los no universitarios, destacando uno muy alto cerca del índice 10k lo que podría indicar casos excepcionales.')
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('Los ingresos de los no universitarios (rojo) son mucho más altos y presentan una mayor variabilidad en comparación con los ingresos de los universitarios (azul), los ingresos de los no universitarios muestran una alta variabilidad con algunos picos significativos que alcanzan ingresos muy altos, sin embargo la mayoría de los datos se agrupan en rangos bajos de ingresos, hay varios picos en los ingresos de los no universitarios, destacando uno muy alto cerca del índice 10k lo que podría indicar casos excepcionales.',
+                   style={'fontSize': '25px'}
+                   )
         ])
     elif tab == 'tab-2':
         return html.Div([
-            html.H3('Pregunta 2: Situación laboral y salarios según convivencia con los padres'),
+            html.H3('Pregunta 2: Situación laboral y salarios según convivencia con los padres', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id='grafica1',
                 figure=px.bar(df2_1, x='padres', y='avg_ingreso_tot', title='¿Cómo se compara la situación laboral de la gente que vive con sus padres versus quienes no?').update_layout(
@@ -267,11 +361,12 @@ def render_content(tab):
                     xaxis_title='Situación laboral',
                     yaxis_title='Cantidad'
                 )
-            )
+            ),
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'})
         ])
     elif tab == 'tab-3':
         return html.Div([
-            html.H3('Pregunta 3: Salarios de Mujeres Jefas de Familia'),
+            html.H3('Pregunta 3: Salarios de Mujeres Jefas de Familia', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id='salary-graph',
                 figure=px.scatter(df3, x='id_miembro', y='ingreso_tot', title='Salarios de Mujeres Jefas de Familia',
@@ -294,11 +389,14 @@ def render_content(tab):
                               labels={'count': 'Número de Personas', 'salario_grupo': 'Grupo de Salarios'},
                               color_discrete_sequence=px.colors.sequential.Viridis)
             ),
-            html.P('Conclusión: El salario mínimo en Argentina en 2019 fue de 14,125 pesos argentinos. Según los datos de nuestra encuesta, el 73.9% de las mujeres jefas de familia ganan por encima de este salario. Sin embargo, aunque la mayoría supera el salario mínimo, los ingresos de estas mujeres no son significativamente altos, ya que los datos no presentan una gran dispersión. Se estima que para vivir bien en Argentina en 2019 se necesitarían alrededor de 50,000 pesos mensuales. Esto implica que aproximadamente la mitad de las mujeres jefas de familia encuestadas alcanzan este nivel de ingresos.')
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('El salario mínimo en Argentina en 2019 fue de 14,125 pesos argentinos. Según los datos de nuestra encuesta, el 73.9% de las mujeres jefas de familia ganan por encima de este salario. Sin embargo, aunque la mayoría supera el salario mínimo, los ingresos de estas mujeres no son significativamente altos, ya que los datos no presentan una gran dispersión. Se estima que para vivir bien en Argentina en 2019 se necesitarían alrededor de 50,000 pesos mensuales. Esto implica que aproximadamente la mitad de las mujeres jefas de familia encuestadas alcanzan este nivel de ingresos.',
+                   style={'fontSize': '25px'}
+                   )
         ])
     elif tab == 'tab-4':
         return html.Div([
-            html.H3('Pregunta 4: Comparación de Ingresos Familiares y Salarios entre Universidad Privada y Pública'),
+            html.H3('Pregunta 4: Comparación de Ingresos Familiares y Salarios entre Universidad Privada y Pública', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id='grafica1',
                 figure=px.bar(df4, x='sector_educativo', y='ingresos_familiares', title='¿Cómo se comparan los ingresos familiares y el salario entre universidad privada y pública?').update_layout(            
@@ -324,12 +422,17 @@ def render_content(tab):
                     title_x=0.5
                 ).update_traces(marker_color='#EF553B', marker_line_color='rgb(8,48,107)', marker_line_width=1.5)
             ),
-            html.P('Conclusión:1. El gráfico muestra los ingresos familiares según el sector educativo al que pertenece la universidad (privada religiosa, estatal/pública, privada no religiosa, y una categoría adicional de "no corresponde"). Las familias cuyos estudiantes asisten a universidades privadas no religiosas tienen los ingresos familiares más altos, cercanos a los 100k. Esto sugiere que las universidades privadas religiosas están asociadas con familias de mayores ingresos. Similar a las universidades privadas no religiosas, las universidades privadas religiosas también muestran altos ingresos familiares, aunque ligeramente menores que los del sector privado no religioso. Esto indica que, en general, las universidades privadas (religiosas y no religiosas) están relacionadas con familias de mayor capacidad económica. Las familias cuyos estudiantes asisten a universidades estatales o públicas tienen ingresos significativamente menores en comparación con las familias de las universidades privadas. Este grupo tiene ingresos familiares alrededor de los 50k, lo que sugiere que las universidades públicas están más accesibles a familias con menores ingresos. La categoría no corresponde, que posiblemente agrupe otros casos no especificados, muestra ingresos familiares en un rango intermedio, aunque más cercanos a los ingresos de las familias de las universidades públicas. Esto sugiere que este grupo podría incluir una variedad de situaciones económicas no directamente relacionadas con el tipo de universidad.'),
-            html.P('2.Los que estudian en universidad privadas no religiosas son los que obtienen un mayor salario, comparado con los que estudiaron en universidad estatales/públicas y el de estas dos mencionadas es mucho mayor que el de las universidades privadas religiosas, aunque el salario de la categoría "no corresponde" muestra los salarios más altos. Este análisis sugiere que, a pesar de que las universidades privadas religiosas tienen ingresos familiares más altos, los egresados de estas instituciones no necesariamente obtienen los salarios más altos. En contraste, los egresados de universidades privadas no religiosas tienen salarios más altos, lo que podría reflejar una mejor preparación para el mercado laboral o una mayor demanda por sus habilidades. La categoría "no corresponde" muestra los salarios más altos, lo cual podría indicar que agrupa diversos casos con mejores oportunidades salariales.')
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('1. El gráfico muestra los ingresos familiares según el sector educativo al que pertenece la universidad (privada religiosa, estatal/pública, privada no religiosa, y una categoría adicional de "no corresponde"). Las familias cuyos estudiantes asisten a universidades privadas no religiosas tienen los ingresos familiares más altos, cercanos a los 100k. Esto sugiere que las universidades privadas religiosas están asociadas con familias de mayores ingresos. Similar a las universidades privadas no religiosas, las universidades privadas religiosas también muestran altos ingresos familiares, aunque ligeramente menores que los del sector privado no religioso. Esto indica que, en general, las universidades privadas (religiosas y no religiosas) están relacionadas con familias de mayor capacidad económica. Las familias cuyos estudiantes asisten a universidades estatales o públicas tienen ingresos significativamente menores en comparación con las familias de las universidades privadas. Este grupo tiene ingresos familiares alrededor de los 50k, lo que sugiere que las universidades públicas están más accesibles a familias con menores ingresos. La categoría no corresponde, que posiblemente agrupe otros casos no especificados, muestra ingresos familiares en un rango intermedio, aunque más cercanos a los ingresos de las familias de las universidades públicas. Esto sugiere que este grupo podría incluir una variedad de situaciones económicas no directamente relacionadas con el tipo de universidad.',
+                   style={'fontSize': '25px'}
+                   ),
+            html.P('2.Los que estudian en universidad privadas no religiosas son los que obtienen un mayor salario, comparado con los que estudiaron en universidad estatales/públicas y el de estas dos mencionadas es mucho mayor que el de las universidades privadas religiosas, aunque el salario de la categoría "no corresponde" muestra los salarios más altos. Este análisis sugiere que, a pesar de que las universidades privadas religiosas tienen ingresos familiares más altos, los egresados de estas instituciones no necesariamente obtienen los salarios más altos. En contraste, los egresados de universidades privadas no religiosas tienen salarios más altos, lo que podría reflejar una mejor preparación para el mercado laboral o una mayor demanda por sus habilidades. La categoría "no corresponde" muestra los salarios más altos, lo cual podría indicar que agrupa diversos casos con mejores oportunidades salariales.',
+                   style={'fontSize': '25px'}
+                   )
         ])
     elif tab == 'tab-5':
         return html.Div([
-            html.H3('Pregunta 5: Salarios según Lugar de Nacimiento'),
+            html.H3('Pregunta 5: Salarios según Lugar de Nacimiento', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id='grafica3',
                 figure=px.bar(df5, x='lugar_nacimiento', y='salario', title='¿Qué lugar de nacimiento (de los presentes en la encuesta) cuenta con los mayores salarios?').update_layout(            
@@ -342,22 +445,52 @@ def render_content(tab):
                     title_x=0.5
                 ).update_traces(marker_color='#00CC96', marker_line_color='rgb(8,48,107)', marker_line_width=1.5)
             ),
-            html.P('Conclusión: La visualización muestra los lugares de nacimiento con los mayores salarios, destacando las diferencias geográficas en los ingresos.')
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('La visualización muestra los lugares de nacimiento con los mayores salarios, destacando las diferencias geográficas en los ingresos.',
+                   style={'fontSize': '25px'})
         ])
     elif tab == 'tab-6':
         return html.Div([
-            html.H3('Pregunta 6: Salarios según Lugar de Nacimiento'),
+            html.H3('Pregunta 6: Salarios según Lugar de Nacimiento', style={'fontSize': '30px', 'fontWeight': 'bold'}),
             dcc.Graph(
                 id = 'pregunta_6',
             figure=px.bar(df6, x='num_miembros', y='promedio_escolaridad', title='¿Las familias más grandes tienden a tener una mejor, igual o peor educación que las familias más pequeñas?').update_layout(            
             xaxis_title = 'Número de miembros de la familia',
             yaxis_title = 'Promedio de escolaridad')
             ),
-            html.P('Conclusión:')
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('El gráfico muestra una clara tendencia, donde la escolaridad promedio disminuye conforme aumenta el tamaño de las familias. Esto tiene sentido, considerando los altos costos de la educación superior, además de la presión en las familias más grandes de entrar a una edad más temprana al mundo laboral, perdiendo oportunidades importantes de empleo. Hay que tener en cuenta que pocas familias tienen un número enorme de miembros, entonces datos como la familia de 19 integrantes no deberían ser tenidos en cuenta en el análisis. A pesar de esto, se muestra una tendencia clara.',
+                   style={'fontSize': '25px'}
+                   )
         ])
+    elif tab == 'tab-7':
+        return html.Div([
+            html.H3('Pregunta 7: ¿Las personas con ingresos familiares per cápita superiores a la media tienen salarios superiores a la media?', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            dcc.Graph(
+                id='pregunta_7_1',
+                figure=px.bar(df7_1, x='categoria_ingreso', y='promedio_salario', title='Salario según los ingresos familiares (Ingresos familiares divididos en "superior" e "inferior" a la media)').update_layout(
+                    xaxis_title='Categoría de ingresos familiares (superior e inferior a la media)',
+                    yaxis_title='Promedio del salario'
+                )
+            ),
+            dcc.Graph(
+                id='pregunta_7_2',
+                figure=px.bar(df7_2, x='cuartil', y='promedio_salario', title='Salario según los ingresos familiares (Ingresos familiares divididos en cuartiles)').update_layout(
+                    xaxis_title='Cuartiles',
+                    yaxis_title='Promedio del salario'
+                )
+            ),  
+            html.H4('Conclusión:', style={'fontSize': '30px', 'fontWeight': 'bold'}),
+            html.P('Hay una clara correlación entre los ingresos familiares y el salario. Aunque puede haber algunas excepciones, que una familia tenga altos ingresos hace fácil predecir que esto se traducirá en futuros altos salarios, ya sea por una mejor educación, mayores contactos o presión familiar a tener y mantener mejores empleos.',
+                   style={'fontSize': '25px'}
+                   )
+        ])
+    
     else:
         return html.Div([
-            html.H3('Selecciona una pregunta para ver los resultados correspondientes.')
+            html.H3('Selecciona una pregunta para ver los resultados correspondientes.',
+                    style={'fontSize': '25px'}
+                    )
         ])
 
 if __name__ == '__main__':
